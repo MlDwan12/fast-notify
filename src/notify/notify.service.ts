@@ -50,22 +50,40 @@ export class NotifyService {
   }
 
   async createBitrixLead(data: LeadPayload) {
+    const { firstName, lastName, phone, email, serviceId } = data;
+
+    const onlyEmail = email && !firstName && !lastName && !phone;
+
+    const fields = onlyEmail
+      ? {
+          TITLE: 'Новый лид с сайта на рассылку',
+          NAME: '',
+          LAST_NAME: '',
+          EMAIL: [{ VALUE: email, VALUE_TYPE: 'WORK' }],
+          COMMENTS: `Форма с сайта (рассылки). Email: ${email}`,
+          UF_CRM_1667207127324: serviceId ?? null,
+          UF_CRM_CREATED_BY_API: true,
+        }
+      : {
+          TITLE: 'Новый лид с сайта',
+          NAME: firstName ?? '',
+          LAST_NAME: lastName ?? '',
+          PHONE: phone ? [{ VALUE: phone, VALUE_TYPE: 'WORK' }] : [],
+          EMAIL: email ? [{ VALUE: email, VALUE_TYPE: 'WORK' }] : [],
+          COMMENTS: `Форма с сайта. Телефон: ${phone}. Email: ${email}`,
+          SOURCE_ID: 'WEB',
+          UF_CRM_1667207127324: serviceId ?? null,
+          UF_CRM_CREATED_BY_API: true,
+        };
+
     try {
       const webhook = this.config.get<string>('bitrix.webhook');
       // const res = await axios.get(`${webhook}/crm.lead.fields`);
       // const services = res.data.result.UF_CRM_1667207127324.items;
+
       await axios
         .post(`${webhook}/crm.lead.add`, {
-          fields: {
-            TITLE: 'Новый лид с сайта',
-            NAME: data.firstName,
-            LAST_NAME: data.lastName ?? '',
-            PHONE: [{ VALUE: data.phone, VALUE_TYPE: 'WORK' }],
-            EMAIL: [{ VALUE: data.email ?? '', VALUE_TYPE: 'WORK' }],
-            COMMENTS: `Форма с сайта. Телефон: ${data.phone}. Email: ${data.email}`,
-            UF_CRM_1667207127324: data.serviceId ?? null,
-            UF_CRM_CREATED_BY_API: true,
-          },
+          fields,
         })
         .catch((e) => console.log(e));
     } catch (err) {
@@ -75,6 +93,8 @@ export class NotifyService {
   }
 
   async sendAndCreateLead(dto: LeadPayload) {
+    console.log(dto);
+
     await this.createBitrixLead(dto);
 
     const adminEmail = this.config.get<string>('mail.admin');
@@ -82,16 +102,18 @@ export class NotifyService {
       throw new Error('MAIL_ADMIN is not configured');
     }
 
-    this.sendMail({
-      to: adminEmail,
-      subject: adminTitle,
-      text: adminEmailTemplate(dto),
-    });
+    if (dto.email) {
+      this.sendMail({
+        to: adminEmail,
+        subject: adminTitle,
+        text: adminEmailTemplate(dto),
+      });
 
-    this.sendMail({
-      to: dto.email,
-      subject: userTitle,
-      html: clientEmailTemplate(dto),
-    });
+      this.sendMail({
+        to: dto.email,
+        subject: userTitle,
+        html: clientEmailTemplate(dto),
+      });
+    }
   }
 }

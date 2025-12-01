@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsNotEmpty,
   IsEmail,
   IsBoolean,
   IsEnum,
@@ -10,23 +9,25 @@ import { LeadServiceEnum } from 'src/shared/enums/leadService.enum';
 import { LeadPayload } from 'src/shared/types/leadPayload.type';
 
 export class CreateLeadDto implements LeadPayload {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  firstName: string;
+  firstName?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  lastName?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  phone: string;
+  phone?: string;
 
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
+  @IsOptional()
   @IsBoolean()
-  agreement: boolean;
+  agreement?: boolean;
 
   @IsOptional()
   @IsEnum(LeadServiceEnum)
