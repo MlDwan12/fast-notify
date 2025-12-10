@@ -70,9 +70,15 @@ export class NotifyService {
           LAST_NAME: lastName ?? '',
           PHONE: phone ? [{ VALUE: phone, VALUE_TYPE: 'WORK' }] : [],
           EMAIL: email ? [{ VALUE: email, VALUE_TYPE: 'WORK' }] : [],
-          COMMENTS: `Форма с сайта. Телефон: ${phone}. Email: ${email}`,
-          SOURCE_ID: 'WEB',
-          UF_CRM_1667207127324: serviceId ?? null,
+          COMMENTS: `Форма с сайта: https://valsdigital.ru. Телефон: ${phone}. Email: ${email}`,
+          SOURCE_ID: 'CALLBACK',
+          WEB: [
+            {
+              VALUE: 'https://valsdigital.ru',
+              VALUE_TYPE: 'WORK',
+            },
+          ],
+          UF_CRM_1667207127324: serviceId ? String(serviceId) : undefined,
           UF_CRM_CREATED_BY_API: true,
         };
 
