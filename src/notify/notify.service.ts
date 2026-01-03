@@ -8,6 +8,7 @@ import { adminEmailTemplate } from './templates/ admin-email.template';
 import { clientEmailTemplate } from './templates/client-email.template';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { adminTitle, userTitle } from 'src/shared/const/mail.const';
+import { AppSourceToBitrix } from 'src/shared/const/bitrix/appSource.const';
 
 @Injectable()
 export class NotifyService {
@@ -53,14 +54,34 @@ export class NotifyService {
     const { firstName, lastName, phone, email, serviceId } = data;
 
     const onlyEmail = email && !firstName && !lastName && !phone;
+    //  const lead = {
+    //         fields: {
+    //           TITLE: `Новая заявка от ${payload.name}`,/
+    //           NAME: payload.name,/
+    //           COMMENTS: `Форма с сайта: https://otdelprodaj.online. Сообщение к форме: ${payload?.message}`,/
+    //           OPPORTUNITY: payload.opportunity || 0,
+    //           CURRENCY_ID: payload.currency_id || BitrixCurrency.RUB,
+    //           EMAIL: [{ VALUE: payload?.email, VALUE_TYPE: 'WORK' }],
+    //           PHONE: [{ VALUE: payload?.phone, VALUE_TYPE: 'WORK' }],
+    //           SOURCE_ID: 'CALLBACK',
+    //           WEB: [
+    //             {
+    //               VALUE: 'https://otdelprodaj.online',
+    //               VALUE_TYPE: 'WORK',
+    //             },
+    //           ],
+    //           UF_CRM_CREATED_BY_API: true,
+    //           ASSIGNED_BY_ID: 4769,
+    //         },
+    //       };
 
     const fields = onlyEmail
       ? {
           TITLE: 'Новый лид с сайта на рассылку',
           NAME: '',
           LAST_NAME: '',
-          EMAIL: [{ VALUE: email, VALUE_TYPE: 'WORK' }],
           COMMENTS: `Форма с сайта (рассылки). Email: ${email}`,
+          EMAIL: [{ VALUE: email, VALUE_TYPE: 'WORK' }],
           UF_CRM_1667207127324: serviceId ?? null,
           UF_CRM_CREATED_BY_API: true,
         }
@@ -68,10 +89,12 @@ export class NotifyService {
           TITLE: 'Новый лид с сайта',
           NAME: firstName ?? '',
           LAST_NAME: lastName ?? '',
+          //           OPPORTUNITY: payload.opportunity || 0,
+          //           CURRENCY_ID: payload.currency_id || BitrixCurrency.RUB,
           PHONE: phone ? [{ VALUE: phone, VALUE_TYPE: 'WORK' }] : [],
           EMAIL: email ? [{ VALUE: email, VALUE_TYPE: 'WORK' }] : [],
           COMMENTS: `Форма с сайта: https://valsdigital.ru. Телефон: ${phone}. Email: ${email}`,
-          SOURCE_ID: 'CALLBACK',
+          SOURCE_ID: AppSourceToBitrix.SITE,
           WEB: [
             {
               VALUE: 'https://valsdigital.ru',
@@ -84,8 +107,28 @@ export class NotifyService {
 
     try {
       const webhook = this.config.get<string>('bitrix.webhook');
+      // вынести в отдельный сервис BitrixService
       // const res = await axios.get(`${webhook}/crm.lead.fields`);
-      // const services = res.data.result.UF_CRM_1667207127324.items;
+      // const services = res.data.result.UF_CRM_CALLTOUCHWS5L;
+      // const statusListSourceID = await axios.get(`${webhook}/crm.status.list`, {
+      //   params: {
+      //     filter: {
+      //       ENTITY_ID: 'SOURCE',
+      //     },
+      //   },
+      // });
+      // const statusList = await axios.get(`${webhook}/crm.status.list`, {
+      //   params: {
+      //     filter: {
+      //       ENTITY_ID: 'STATUS',
+      //     },
+      //   },
+      // });
+      // const currencyList = await axios.get(`${webhook}/crm.currency.list`);
+
+      // console.log('services===> ', services);
+
+      // console.log('VALUE_TYPE===> ', VALUE_TYPE);
 
       await axios
         .post(`${webhook}/crm.lead.add`, {
@@ -99,8 +142,6 @@ export class NotifyService {
   }
 
   async sendAndCreateLead(dto: LeadPayload) {
-    console.log(dto);
-
     await this.createBitrixLead(dto);
 
     const adminEmail = this.config.get<string>('mail.admin');
