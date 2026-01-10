@@ -1,6 +1,6 @@
 import { LeadPayload } from 'src/shared/types/leadPayload.type';
 
-export function adminEmailTemplate(data: LeadPayload): string {
+export function adminEmailTemplate(data: LeadPayload, origin: string): string {
   return `
 Новый лид с сайта vals.digital
 
@@ -10,6 +10,6 @@ export function adminEmailTemplate(data: LeadPayload): string {
 Email: ${data.email}
 
 ---
-Отправлено автоматически с сайта.
+Отправлено автоматически с сайта (${origin}).
   `;
 }
